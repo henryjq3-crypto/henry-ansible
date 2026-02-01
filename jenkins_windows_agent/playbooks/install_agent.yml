@@ -1,5 +1,5 @@
 ---
-- name: Install Jenkins agent as a Windows service
+- name: Install Jenkin agent as a Windows service
   hosts: windows
   gather_facts: false
 
