@@ -10,4 +10,10 @@ tags:
   - jenkins
   - windows
   - agent
+
+repository: "https://git.example.com/henryorg/jenkins_windows_agent"
+documentation: "https://git.example.com/henryorg/jenkins_windows_agent"
+homepage: "https://git.example.com/henryorg/jenkins_windows_agent"
+issues: "https://git.example.com/henryorg/jenkins_windows_agent/issues"
+
 dependencies: {}
