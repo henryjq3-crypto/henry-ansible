@@ -5,7 +5,7 @@ readme: README.md
 authors:
   - "Henry Q"
 description: "Install and run Jenkins agent as a Windows service (NSSM)."
-license: Proprietary
+license: MIT
 tags:
   - jenkins
   - windows
