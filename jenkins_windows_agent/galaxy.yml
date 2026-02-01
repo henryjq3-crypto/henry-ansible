@@ -1,0 +1,13 @@
+namespace: henry-org
+name: jenkins_windows_agent
+version: 1.0.0
+readme: README.md
+authors:
+  - "Henry Q"
+description: "Install and run Jenkins agent as a Windows service (NSSM)."
+license: MIT
+tags:
+  - jenkins
+  - windows
+  - agent
+dependencies: {}

@@ -1,0 +1,7 @@
+---
+- name: Install Jenkins agent as a Windows service
+  hosts: windows
+  gather_facts: false
+
+  roles:
+    - role: windows_jenkins_agent

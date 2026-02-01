@@ -1,0 +1,58 @@
+---
+- name: Create Jenkins agent directory
+  ansible.windows.win_file:
+    path: "{{ jenkins_agent_dir }}"
+    state: directory
+
+- name: Download agent.jar
+  ansible.windows.win_get_url:
+    url: "{{ jenkins_agent_jar_url }}"
+    dest: "{{ jenkins_agent_dir }}\\agent.jar"
+    force: true
+
+- name: Download NSSM zip
+  ansible.windows.win_get_url:
+    url: "{{ nssm_zip_url }}"
+    dest: "{{ jenkins_agent_dir }}\\nssm.zip"
+    force: true
+
+- name: Unzip NSSM
+  community.windows.win_unzip:
+    src: "{{ jenkins_agent_dir }}\\nssm.zip"
+    dest: "{{ jenkins_agent_dir }}"
+    delete_archive: false
+
+- name: Copy nssm.exe to agent dir
+  ansible.windows.win_copy:
+    src: "{{ jenkins_agent_dir }}\\{{ nssm_exe_relative_path }}"
+    dest: "{{ jenkins_agent_dir }}\\nssm.exe"
+    remote_src: true
+
+- name: Create agent start script
+  ansible.windows.win_template:
+    src: jenkins-agent.cmd.j2
+    dest: "{{ jenkins_agent_dir }}\\jenkins-agent.cmd"
+
+- name: Install Jenkins agent service (NSSM)
+  ansible.windows.win_shell: >
+    "{{ jenkins_agent_dir }}\\nssm.exe" install "{{ jenkins_agent_service_name }}"
+    "{{ jenkins_agent_dir }}\\jenkins-agent.cmd"
+  args:
+    creates: "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\{{ jenkins_agent_service_name }}"
+
+- name: Set service to auto start
+  ansible.windows.win_service:
+    name: "{{ jenkins_agent_service_name }}"
+    start_mode: auto
+
+- name: Configure service account (optional)
+  when: jenkins_agent_run_as_user | length > 0
+  ansible.windows.win_service:
+    name: "{{ jenkins_agent_service_name }}"
+    username: "{{ jenkins_agent_run_as_user }}"
+    password: "{{ jenkins_agent_run_as_password }}"
+
+- name: Start service
+  ansible.windows.win_service:
+    name: "{{ jenkins_agent_service_name }}"
+    state: started

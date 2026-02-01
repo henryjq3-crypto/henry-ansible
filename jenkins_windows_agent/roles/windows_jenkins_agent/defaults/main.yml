@@ -1,0 +1,29 @@
+# Where we install everything
+jenkins_agent_dir: "C:\\Jenkins"
+
+# Jenkins controller URL 
+jenkins_url: "http://54.152.154.239:8080"
+
+# Jenkins agent (node) name in Jenkins
+jenkins_agent_name: "window"
+
+# Jenkins secret for that agent
+jenkins_agent_secret: "b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264"
+
+# Service name
+jenkins_agent_service_name: "JenkinsAgent"
+
+# Agent jar download location (from your Jenkins)
+# Usually: https://jenkins.example.com/jnlpJars/agent.jar
+jenkins_agent_jar_url: "{{ jenkins_url }}/jnlpJars/agent.jar"
+
+# Optional: run agent as specific Windows account
+# If empty, it runs as LocalSystem
+jenkins_agent_run_as_user: "admin"
+jenkins_agent_run_as_password: "fyzCQDlSI)P24bXWQg4ymxx-bqTR?;XN"
+
+# NSSM download (zip) - you can replace with internal artifact repo if needed
+nssm_zip_url: "https://nssm.cc/release/nssm-2.24.zip"
+
+# Choose nssm exe inside the zip (x64 typical)
+nssm_exe_relative_path: "nssm-2.24\\win64\\nssm.exe"

@@ -1,0 +1,15 @@
+@echo off
+setlocal
+
+set JENKINS_URL={{ jenkins_url }}
+set AGENT_NAME={{ jenkins_agent_name }}
+set AGENT_SECRET={{ jenkins_agent_secret }}
+
+REM Jenkins inbound agent
+REM Uses JNLP URL based on node name
+java -jar "{{ jenkins_agent_dir }}\agent.jar" ^
+  -jnlpUrl "%JENKINS_URL%/computer/%AGENT_NAME%/jenkins-agent.jnlp" ^
+  -secret "%AGENT_SECRET%" ^
+  -workDir "{{ jenkins_agent_dir }}"
+
+endlocal
