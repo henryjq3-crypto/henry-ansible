@@ -1,4 +1,4 @@
-namespace: henry-org
+namespace: henryorg
 name: jenkins_windows_agent
 version: 1.0.0
 readme: README.md
