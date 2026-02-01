@@ -3,5 +3,9 @@
   hosts: windows
   gather_facts: false
 
+  collections:
+    - ansible.windows
+    - community.windows
+
   roles:
     - role: henryorg.jenkins_windows_agent.windows_jenkins_agent

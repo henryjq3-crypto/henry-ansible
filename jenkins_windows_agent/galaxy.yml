@@ -16,4 +16,7 @@ documentation: "https://git.example.com/henryorg/jenkins_windows_agent"
 homepage: "https://git.example.com/henryorg/jenkins_windows_agent"
 issues: "https://git.example.com/henryorg/jenkins_windows_agent/issues"
 
-dependencies: {}
+dependencies:
+  ansible.windows: ">=1.14.0"
+  community.windows: ">=1.12.0"
+
