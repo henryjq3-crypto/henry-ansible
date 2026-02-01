@@ -4,4 +4,4 @@
   gather_facts: false
 
   roles:
-    - role: windows_jenkins_agent
+    - role: henry-org.jenkins_windows_agent.windows_jenkins_agent
