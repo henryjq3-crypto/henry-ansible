@@ -1,6 +1,6 @@
 ---
 - name: Install Jenkins Agent as a Windows Service and start it
-  hosts: windows
+  hosts: all
   gather_facts: no
 
   vars:
