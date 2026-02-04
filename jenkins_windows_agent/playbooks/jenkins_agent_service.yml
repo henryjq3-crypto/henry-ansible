@@ -1,0 +1,80 @@
+---
+- name: Install Jenkins Agent as a Windows Service and start it
+  hosts: windows
+  gather_facts: no
+
+  vars:
+    # Where to store agent files
+    jenkins_agent_dir: 'C:\JenkinsAgent'
+
+    # Your Jenkins controller URL (no trailing slash is fine either way)
+    jenkins_url: 'http://54.152.154.239:8080'
+
+    # The agent name you created in Jenkins
+    jenkins_agent_name: 'windows'
+
+    # The agent secret from Jenkins (Manage Jenkins -> Nodes -> your node -> secret)
+    jenkins_agent_secret: 'b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264'
+
+    # Where to download the agent.jar from Jenkins
+    jenkins_agent_jar_url: '{{ jenkins_url }}/jnlpJars/agent.jar'
+    jenkins_agent_jar_path: '{{ jenkins_agent_dir }}\agent.jar'
+
+    # Service details
+    jenkins_service_name: 'JenkinsAgent'
+    jenkins_service_display: 'Jenkins Agent Service'
+
+    # The service will run as LocalSystem (easy mode)
+    # If you need a domain/service account later, tell me and I’ll adjust it.
+    jenkins_java_path: 'C:\Program Files (x86)\Java\jre1.8.0_481\bin\java.exe'
+
+    # Jenkins inbound agent command (JNLP)
+    jenkins_agent_args: >-
+      -jar "{{ jenkins_agent_jar_path }}"
+      -jnlpUrl "{{ jenkins_url }}/computer/{{ jenkins_agent_name }}/jenkins-agent.jnlp"
+      -secret "{{ jenkins_agent_secret }}"
+      -workDir "{{ jenkins_agent_dir }}"
+
+  tasks:
+    - name: 1) Make folder for Jenkins Agent
+      ansible.windows.win_file:
+        path: "{{ jenkins_agent_dir }}"
+        state: directory
+
+    - name: 2) Download agent.jar from Jenkins
+      ansible.windows.win_get_url:
+        url: "{{ jenkins_agent_jar_url }}"
+        dest: "{{ jenkins_agent_jar_path }}"
+        force: yes
+
+    - name: 3) Check if the service already exists
+      ansible.windows.win_service_info:
+        name: "{{ jenkins_service_name }}"
+      register: svc_info
+
+    - name: 4) Create the Jenkins Agent service (only if missing)
+      ansible.windows.win_shell: >
+        sc.exe create "{{ jenkins_service_name }}"
+        binPath= "\"{{ jenkins_java_path }}\" {{ jenkins_agent_args }}"
+        start= auto
+        DisplayName= "{{ jenkins_service_display }}"
+      when: not svc_info.exists
+
+    - name: 5) Ensure service is set to start automatically
+      ansible.windows.win_service:
+        name: "{{ jenkins_service_name }}"
+        start_mode: auto
+
+    - name: 6) Start the Jenkins Agent service
+      ansible.windows.win_service:
+        name: "{{ jenkins_service_name }}"
+        state: started
+
+    - name: 7) Show service status
+      ansible.windows.win_service_info:
+        name: "{{ jenkins_service_name }}"
+      register: final_status
+
+    - name: Print final service status
+      ansible.builtin.debug:
+        var: final_status
