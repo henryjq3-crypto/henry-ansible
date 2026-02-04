@@ -8,7 +8,7 @@
     jenkins_agent_dir: 'C:\JenkinsAgent'
 
     # Your Jenkins controller URL (no trailing slash is fine either way)
-    jenkins_url: 'http://54.152.154.239:8080'
+    jenkins_url: 'http://34.235.136.143:8080'
 
     # The agent name you created in Jenkins
     jenkins_agent_name: 'windows'
