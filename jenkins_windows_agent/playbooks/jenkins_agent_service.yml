@@ -4,6 +4,12 @@
   gather_facts: no
 
   vars:
+    jenkins_jnlp_url: 'http://34.235.136.143:8080/computer/window/jenkins-agent.jnlp'
+    jenkins_jar_path: 'C:\JenkinsAgent\agent.jar'
+    jenkins_secret: 'b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264'
+    service_name: 'JenkinsAgent'
+    start_script: 'C:\JenkinsAgent\start-agent.ps1'
+    log_file: 'C:\JenkinsAgent\agent-service.log'
     # Where to store agent files
     jenkins_agent_dir: 'C:\JenkinsAgent'
 
@@ -59,18 +65,69 @@
   #     start= auto
   #     DisplayName= "{{ jenkins_service_display }}"
   #    when: not svc_info.exists
-    - name: 4) Create Jenkins Agent service safely
+ #   - name: 4) Create Jenkins Agent service safely
+  #    ansible.windows.win_service:
+   #    name: JenkinsAgent
+    #   display_name: Jenkins Agent Service
+     #  path: >
+      #  " C:\Program Files\Java\jdk-17\bin\java.exe"
+      #  -jar "C:\JenkinsAgent\agent.jar"
+     #   -jnlpUrl "http://34.235.136.143:8080/computer/window/jenkins-agent.jnlp"
+     #   -secret "b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264"
+    #    -workDir "C:\JenkinsAgent"
+    #   start_mode: auto
+   #    state: started
+    - name: 4) Write PowerShell wrapper to start agent (with logs)
+      ansible.windows.win_copy:
+       dest: "{{ start_script }}"
+       content: |
+        $ErrorActionPreference = "Stop"
+
+        $java = "{{ jenkins_java_path }}"
+        $jar  = "{{ jenkins_jar_path }}"
+        $jnlp = "{{ jenkins_jnlp_url }}"
+        $secret = "{{ jenkins_secret }}"
+        $work = "{{ jenkins_agent_dir }}"
+        $log  = "{{ log_file }}"
+
+        "=== Starting Jenkins Agent Service: $(Get-Date) ===" | Out-File -FilePath $log -Append
+        "Java: $java" | Out-File -FilePath $log -Append
+        "Jar:  $jar"  | Out-File -FilePath $log -Append
+        "JNLP: $jnlp" | Out-File -FilePath $log -Append
+        "Work: $work" | Out-File -FilePath $log -Append
+
+        & $java -jar $jar -jnlpUrl $jnlp -secret $secret -workDir $work *>> $log
+
+    - name: 5) Stop existing service if present (ignore if missing)
       ansible.windows.win_service:
-       name: JenkinsAgent
-       display_name: Jenkins Agent Service
-       path: >
-        " C:\Program Files\Java\jdk-17\bin\java.exe"
-        -jar "C:\JenkinsAgent\agent.jar"
-        -jnlpUrl "http://34.235.136.143:8080/computer/window/jenkins-agent.jnlp"
-        -secret "b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264"
-        -workDir "C:\JenkinsAgent"
+       name: "{{ service_name }}"
+       state: stopped
+      ignore_errors: yes
+
+    - name: 6) Delete existing service (clean slate) (ignore if missing)
+      ansible.windows.win_shell: |
+       sc.exe delete "{{ service_name }}"
+      ignore_errors: yes
+
+    - name: 7) Create Jenkins Agent service that runs the wrapper script
+      ansible.windows.win_service:
+       name: "{{ service_name }}"
+       display_name: "Jenkins Agent Service"
+       path: >-
+        C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+        -NoProfile -ExecutionPolicy Bypass -File "{{ start_script }}"
        start_mode: auto
        state: started
+
+    - name: 8) Read last 80 lines of service log (for troubleshooting)
+      ansible.windows.win_shell: |
+       if (Test-Path "{{ log_file }}") { Get-Content "{{ log_file }}" -Tail 80 } else { "No log file yet." }
+      register: agent_log
+      changed_when: false
+
+    - name: Show log tail
+      ansible.builtin.debug:
+       var: agent_log.stdout_lines
 
     - name: 5) Ensure service is set to start automatically
       ansible.windows.win_service:
