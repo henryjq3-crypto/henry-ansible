@@ -52,13 +52,25 @@
         name: "{{ jenkins_service_name }}"
       register: svc_info
 
-    - name: 4) Create the Jenkins Agent service (only if missing)
-      ansible.windows.win_shell: >
-        sc.exe create "{{ jenkins_service_name }}"
-        binPath= "\"{{ jenkins_java_path }}\" {{ jenkins_agent_args }}"
-        start= auto
-        DisplayName= "{{ jenkins_service_display }}"
-      when: not svc_info.exists
+  #  - name: 4) Create the Jenkins Agent service (only if missing)
+  #    ansible.windows.win_shell: >
+  #      sc.exe create "{{ jenkins_service_name }}"
+  #      binPath= "\"{{ jenkins_java_path }}\" {{ jenkins_agent_args }}"
+  #     start= auto
+  #     DisplayName= "{{ jenkins_service_display }}"
+  #    when: not svc_info.exists
+    - name: 4) Create Jenkins Agent service safely
+      ansible.windows.win_service:
+       name: JenkinsAgent
+       display_name: Jenkins Agent Service
+       path: >
+        "C:\Program Files (x86)\Java\jre1.8.0_481\bin\java.exe"
+        -jar "C:\JenkinsAgent\agent.jar"
+        -jnlpUrl "http://34.235.136.143:8080/computer/windows/jenkins-agent.jnlp"
+        -secret "b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264"
+        -workDir "C:\JenkinsAgent"
+       start_mode: auto
+       state: started
 
     - name: 5) Ensure service is set to start automatically
       ansible.windows.win_service:
