@@ -1,0 +1,126 @@
+---
+- name: Install Jenkins Agent as Windows Service using WinSW
+  hosts: all
+  gather_facts: no
+
+  vars:
+    agent_dir: 'C:\JenkinsAgent'
+
+    # Jenkins controller
+    jenkins_url: 'http://34.235.136.143:8080'
+
+    # Your WORKING JNLP URL (note: "window" not "windows")
+    jnlp_url: 'http://34.235.136.143:8080/computer/window/jenkins-agent.jnlp'
+    agent_secret: 'b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264'
+
+    # Java 17 path you installed manually
+    java_path: 'C:\Program Files\Java\jdk-17\bin\java.exe'
+
+    # agent.jar download location
+    agent_jar_url: '{{ jenkins_url }}/jnlpJars/agent.jar'
+    agent_jar_path: '{{ agent_dir }}\agent.jar'
+
+    # WinSW download URL (you can replace with your internal artifact URL if needed)
+    # IMPORTANT: This is a placeholder; set it to the WinSW exe you want (x64).
+    winsw_url: 'REPLACE_WITH_WINSW_DOWNLOAD_URL'
+    winsw_path: '{{ agent_dir }}\JenkinsAgent.exe'
+
+    # WinSW XML config path
+    winsw_xml_path: '{{ agent_dir }}\JenkinsAgent.xml'
+
+    # Service naming (WinSW <id> is the Windows service name)
+    service_id: 'jenkinsagent'
+    service_name: 'JenkinsAgent'
+
+  tasks:
+    - name: 1) Create agent directory
+      ansible.windows.win_file:
+        path: "{{ agent_dir }}"
+        state: directory
+
+    - name: 2) Verify Java exists
+      ansible.windows.win_stat:
+        path: "{{ java_path }}"
+      register: java_stat
+
+    - name: Fail if Java 17 not found
+      ansible.builtin.fail:
+        msg: "Java not found at {{ java_path }}. Update java_path to your Java 17 java.exe."
+      when: not java_stat.stat.exists
+
+    - name: 3) Download agent.jar
+      ansible.windows.win_get_url:
+        url: "{{ agent_jar_url }}"
+        dest: "{{ agent_jar_path }}"
+        force: yes
+
+    - name: 4) Download WinSW and rename to JenkinsAgent.exe
+      ansible.windows.win_get_url:
+        url: "{{ winsw_url }}"
+        dest: "{{ winsw_path }}"
+        force: yes
+
+    - name: 5) Create JenkinsAgent.xml (WinSW config)
+      ansible.windows.win_copy:
+        dest: "{{ winsw_xml_path }}"
+        content: |
+          <service>
+            <id>{{ service_id }}</id>
+            <name>{{ service_name }}</name>
+            <description>This service runs the Jenkins Agent as a Windows service.</description>
+
+            <executable>{{ java_path }}</executable>
+
+            <arguments>
+              -Xrs -Xmx256m
+              -jar "%BASE%\agent.jar"
+              -jnlpUrl "{{ jnlp_url }}"
+              -secret "{{ agent_secret }}"
+              -workDir "{{ agent_dir }}"
+            </arguments>
+
+            <log mode="roll" />
+
+            <onfailure action="restart" delay="10 sec" />
+          </service>
+
+    - name: 6) Check if service exists
+      ansible.windows.win_shell: |
+        $svc = Get-Service -Name "{{ service_id }}" -ErrorAction SilentlyContinue
+        if ($null -eq $svc) { "missing" } else { "present" }
+      register: svc_check
+      changed_when: false
+
+    - name: 7) Install service (only if missing)
+      ansible.windows.win_command: "{{ winsw_path }} install"
+      args:
+        chdir: "{{ agent_dir }}"
+      when: svc_check.stdout | trim == "missing"
+
+    - name: 8) Start service
+      ansible.windows.win_command: "{{ winsw_path }} start"
+      args:
+        chdir: "{{ agent_dir }}"
+
+    - name: 9) Show service status
+      ansible.windows.win_shell: |
+        sc.exe query "{{ service_id }}"
+      register: svc_status
+      changed_when: false
+
+    - name: Print service status
+      ansible.builtin.debug:
+        var: svc_status.stdout_lines
+
+    - name: 10) Show last log lines (if logs exist)
+      ansible.windows.win_shell: |
+        $logs = Get-ChildItem -Path "{{ agent_dir }}" -Filter "*.log" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending
+        if ($logs.Count -eq 0) { "No log files found in {{ agent_dir }}" ; exit 0 }
+        "Newest log: $($logs[0].FullName)"
+        Get-Content $logs[0].FullName -Tail 80
+      register: log_tail
+      changed_when: false
+
+    - name: Print log tail
+      ansible.builtin.debug:
+        var: log_tail.stdout_lines
