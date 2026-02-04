@@ -22,7 +22,7 @@
 
     # WinSW download URL (you can replace with your internal artifact URL if needed)
     # IMPORTANT: This is a placeholder; set it to the WinSW exe you want (x64).
-    winsw_url: 'REPLACE_WITH_WINSW_DOWNLOAD_URL'
+    winsw_url: 'https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe'
     winsw_path: '{{ agent_dir }}\JenkinsAgent.exe'
 
     # WinSW XML config path
@@ -53,6 +53,13 @@
         url: "{{ agent_jar_url }}"
         dest: "{{ agent_jar_path }}"
         force: yes
+   #     - name: 2) Download agent.jar from Jenkins
+    #  ansible.windows.win_get_url:
+   #     url: "{{ jenkins_agent_jar_url }}"
+    #    dest: "{{ jenkins_agent_jar_path }}"
+     #   force: yes 
+ #   jenkins_agent_jar_url: '{{ jenkins_url }}/jnlpJars/agent.jar'
+ #   jenkins_agent_jar_path: '{{ jenkins_agent_dir }}\agent.jar'
 
     - name: 4) Download WinSW and rename to JenkinsAgent.exe
       ansible.windows.win_get_url:
