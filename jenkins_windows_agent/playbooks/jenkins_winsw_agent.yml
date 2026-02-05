@@ -9,26 +9,25 @@
     # Jenkins controller
     jenkins_url: 'http://34.235.136.143:8080'
 
-    # Your WORKING JNLP URL (note: "window" not "windows")
+    # Your WORKING JNLP URL
     jnlp_url: 'http://34.235.136.143:8080/computer/window/jenkins-agent.jnlp'
     agent_secret: 'b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264'
 
-    # Java 17 path you installed manually
+    # Java 17 path 
     java_path: 'C:\Program Files\Java\jdk-17\bin\java.exe'
 
     # agent.jar download location
     agent_jar_url: '{{ jenkins_url }}/jnlpJars/agent.jar'
     agent_jar_path: '{{ agent_dir }}\agent.jar'
 
-    # WinSW download URL (you can replace with your internal artifact URL if needed)
-    # IMPORTANT: This is a placeholder; set it to the WinSW exe you want (x64).
+    # WinSW download URL 
     winsw_url: 'https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe'
     winsw_path: '{{ agent_dir }}\JenkinsAgent.exe'
 
     # WinSW XML config path
     winsw_xml_path: '{{ agent_dir }}\JenkinsAgent.xml'
 
-    # Service naming (WinSW <id> is the Windows service name)
+    # Service naming 
     service_id: 'jenkinsagent'
     service_name: 'JenkinsAgent'
 
@@ -53,13 +52,6 @@
         url: "{{ agent_jar_url }}"
         dest: "{{ agent_jar_path }}"
         force: yes
-   #     - name: 2) Download agent.jar from Jenkins
-    #  ansible.windows.win_get_url:
-   #     url: "{{ jenkins_agent_jar_url }}"
-    #    dest: "{{ jenkins_agent_jar_path }}"
-     #   force: yes 
- #   jenkins_agent_jar_url: '{{ jenkins_url }}/jnlpJars/agent.jar'
- #   jenkins_agent_jar_path: '{{ jenkins_agent_dir }}\agent.jar'
 
     - name: 4) Download WinSW and rename to JenkinsAgent.exe
       ansible.windows.win_get_url:
