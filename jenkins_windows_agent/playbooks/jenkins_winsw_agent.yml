@@ -7,10 +7,10 @@
     agent_dir: 'C:\JenkinsAgent'
 
     # Jenkins controller
-    jenkins_url: 'http://34.235.136.143:8080'
+    jenkins_url: 'http://100.27.219.61:8080'
 
     # Your WORKING JNLP URL
-    jnlp_url: 'http://34.235.136.143:8080/computer/window/jenkins-agent.jnlp'
+    jnlp_url: 'http://100.27.219.61:8080/computer/window/jenkins-agent.jnlp'
     agent_secret: 'b84f33f7c2e9ccfbfeb4c222d13fcc2311e018da6e6e4e477c3da4d13f7ba264'
 
     # Java 17 path 
